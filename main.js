@@ -1,4 +1,5 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, Menu } = require('electron');
+Menu.setApplicationMenu(null);
 const path = require('path');
 const { spawn } = require('child_process');
 
@@ -24,13 +25,16 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    title: 'Website Auto-Screenshot Dashboard',
-    icon: path.join(__dirname, 'public', 'favicon.ico'), // Fallback if icon exists
+    title: 'Auto Screenshot Dashboard',
+    icon: path.join(__dirname, 'public', 'icon.png'), // Use newly generated modern icon
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
     }
   });
+
+  // Hide the default Electron menu bar (File, Edit, View, Window)
+  mainWindow.setMenu(null);
 
   // Load the local Express server URL
   // We wait 2 seconds for Express to boot up before loading

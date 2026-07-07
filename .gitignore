@@ -5,3 +5,5 @@ public/screenshots/
 *.log
 .DS_Store
 Thumbs.db
+*.exe
+dist/
