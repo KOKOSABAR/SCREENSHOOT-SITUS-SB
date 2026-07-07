@@ -1,0 +1,19 @@
+{
+  "name": "auto-ss-link-website",
+  "version": "1.0.0",
+  "description": "Website Auto-Screenshot Dashboard with Google Sheets Integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "puppeteer": "^22.12.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

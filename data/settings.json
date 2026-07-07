@@ -1,0 +1,13 @@
+{
+  "appsScriptUrl": "https://script.google.com/macros/s/AKfycbzUIozxHAv1elXnIrPGq8rAtR5nLojg9Ct2JJ3cG8VpYQFxCBvzgZT3S1-NBVOMr7WJ/exec",
+  "username": "UHARU123",
+  "password": "Aa291217",
+  "captureDelay": 5000,
+  "viewportWidth": 1366,
+  "viewportHeight": 768,
+  "headless": true,
+  "zoomScale": "0.5",
+  "usernameSelector": "",
+  "passwordSelector": "",
+  "loginButtonSelector": ""
+}

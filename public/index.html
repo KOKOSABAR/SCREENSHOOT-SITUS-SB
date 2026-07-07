@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Screenshot Dashboard</title>
+  <!-- Google Fonts Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- SIDEBAR: CONFIGURATION -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-camera-retro brand-icon"></i>
+        <div>
+          <h1>Auto SS Link</h1>
+          <span class="brand-subtitle">Google Sheets Integrated</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- CONNECTION SETTINGS -->
+        <section class="config-section">
+          <h2><i class="fa-solid fa-link"></i> Koneksi Spreadsheet</h2>
+          <div class="form-group">
+            <label for="appsScriptUrl">Google Apps Script URL Web App</label>
+            <input type="text" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+            <span class="input-desc">Deploy script code.gs sebagai Web App (akses ke 'Anyone') lalu tempel link di atas.</span>
+          </div>
+          <div class="sheet-status-badge offline" id="sheetStatusBadge">
+            <i class="fa-solid fa-circle-nodes"></i> Offline Mode (Default)
+          </div>
+        </section>
+
+        <!-- CREDENTIALS SETTINGS -->
+        <section class="config-section">
+          <h2><i class="fa-solid fa-user-lock"></i> Kredensial Login</h2>
+          <div class="form-group">
+            <label for="username">Username (wdbos90)</label>
+            <input type="text" id="username" placeholder="Masukkan Username wdbos">
+          </div>
+          <div class="form-group">
+            <label for="password">Password (wdbos90)</label>
+            <div class="password-wrapper">
+              <input type="password" id="password" placeholder="Masukkan Password wdbos">
+              <button type="button" class="btn-toggle-password" id="togglePasswordBtn">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADVANCED SETTINGS -->
+        <section class="config-section">
+          <div class="section-header-toggle" id="advancedToggle">
+            <h2><i class="fa-solid fa-sliders"></i> Pengaturan Tambahan</h2>
+            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+          </div>
+          <div class="advanced-inputs hidden" id="advancedContainer">
+            <div class="form-group">
+              <label for="captureDelay">Delay Pengambilan (ms)</label>
+              <input type="number" id="captureDelay" value="5000" min="1000" max="60000">
+            </div>
+            <div class="form-group">
+              <label for="zoomScale">Skala Zoom Halaman</label>
+              <select id="zoomScale">
+                <option value="0.5" selected>50% (Rekomendasi)</option>
+                <option value="0.75">75%</option>
+                <option value="1.0">100% (Normal)</option>
+                <option value="1.25">125%</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label for="viewportWidth">Viewport Lebar</label>
+                <input type="number" id="viewportWidth" value="1366">
+              </div>
+              <div class="form-group col-6">
+                <label for="viewportHeight">Viewport Tinggi</label>
+                <input type="number" id="viewportHeight" value="768">
+              </div>
+            </div>
+            <div class="form-group checkbox-group">
+              <input type="checkbox" id="headless" checked>
+              <label for="headless">Headless Mode (Chrome tersembunyi)</label>
+            </div>
+            
+            <div class="selector-divider">Selector Kustom (Opsional)</div>
+            <div class="form-group">
+              <label for="usernameSelector">Username Selector CSS</label>
+              <input type="text" id="usernameSelector" placeholder="Auto-detect">
+            </div>
+            <div class="form-group">
+              <label for="passwordSelector">Password Selector CSS</label>
+              <input type="text" id="passwordSelector" placeholder="Auto-detect">
+            </div>
+            <div class="form-group">
+              <label for="loginButtonSelector">Login Button Selector CSS</label>
+              <input type="text" id="loginButtonSelector" placeholder="Auto-detect">
+            </div>
+          </div>
+        </section>
+        
+        <!-- SAVE CONFIG BUTTON -->
+        <button class="btn btn-primary btn-block" id="btnSaveSettings">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Konfigurasi
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p>Dashboard v1.0.0 &copy; 2026</p>
+      </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="main-content">
+      
+      <!-- DASHBOARD TAB NAVIGATION -->
+      <div class="dashboard-tabs">
+        <button class="tab-btn active" id="tabDashboard">
+          <i class="fa-solid fa-desktop"></i> Monitor Aktif
+        </button>
+        <button class="tab-btn" id="tabHistory">
+          <i class="fa-solid fa-calendar-days"></i> Arsip Kalender
+        </button>
+      </div>
+
+      <!-- TAB 1: MONITOR AKTIF -->
+      <div class="tab-content active" id="contentDashboard">
+      
+      <!-- HEADER METRICS & RUN CONTROLS -->
+      <header class="content-header">
+        <div class="header-title">
+          <h1>Dashboard Kontrol Screenshot <span class="title-date-badge" id="titleTodayDate">-</span></h1>
+          <p>Ambil screenshot otomatis dari daftar link dan simpan ke Google Sheet & Drive secara realtime.</p>
+        </div>
+        
+        <div class="queue-actions">
+          <div class="shift-select-group">
+            <label for="activeShiftSelect"><i class="fa-solid fa-clock"></i> Shift Kerja:</label>
+            <select id="activeShiftSelect" class="shift-select">
+              <option value="Pagi">Shift Pagi</option>
+              <option value="Malam">Shift Malam</option>
+            </select>
+          </div>
+          <button class="btn btn-success" id="btnRunQueue">
+            <i class="fa-solid fa-play"></i> Mulai Semua
+          </button>
+          <button class="btn btn-warning" id="btnRunSelected" disabled>
+            <i class="fa-solid fa-square-check"></i> Mulai Terpilih (<span id="selectedCountText">0</span>)
+          </button>
+          <button class="btn btn-danger hidden" id="btnStopQueue">
+            <i class="fa-solid fa-stop"></i> Hentikan Proses
+          </button>
+          <button class="btn btn-secondary" id="btnResetSession" title="Reset status login cookie browser">
+            <i class="fa-solid fa-rotate"></i> Reset Sesi Login
+          </button>
+        </div>
+      </header>
+
+      <!-- STATS GRID -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon bg-indigo"><i class="fa-solid fa-globe"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Total URL</span>
+            <span class="stat-value" id="statTotal">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-green"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Berhasil</span>
+            <span class="stat-value text-green" id="statSuccess">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-red"><i class="fa-solid fa-circle-xmark"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Gagal</span>
+            <span class="stat-value text-red" id="statFailed">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-amber"><i class="fa-solid fa-spinner"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Progres Antrean</span>
+            <span class="stat-value text-amber" id="statProgress">0%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TERMINAL LOGGER -->
+      <section class="terminal-section">
+        <div class="terminal-header">
+          <div class="terminal-title">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+            <span class="terminal-title-text"><i class="fa-solid fa-terminal"></i> Log Aktivitas Browser (Realtime)</span>
+          </div>
+          <button class="btn-clear-terminal" id="btnClearTerminal" title="Clear logs">
+            <i class="fa-solid fa-trash-can"></i> Bersihkan Log
+          </button>
+        </div>
+        <div class="terminal-body" id="terminalLogs">
+          <div class="log-line log-info">[INFO] Dashboard siap dijalankan. Harap isi Google Apps Script URL lalu simpan konfigurasi untuk memulai sinkronisasi.</div>
+        </div>
+      </section>
+
+      <!-- FILTER & SEARCH BAR -->
+      <section class="filter-bar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Cari Kategori atau URL...">
+        </div>
+        
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label for="statusFilter">Status:</label>
+            <select id="statusFilter">
+              <option value="all">Semua Status</option>
+              <option value="Success">Success (Berhasil)</option>
+              <option value="Failed">Failed (Gagal)</option>
+              <option value="Idle">Idle (Belum Diproses)</option>
+              <option value="Empty">Tidak Ada URL</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" id="btnRefreshList">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+          </button>
+        </div>
+      </section>
+
+      <!-- CATEGORIES GRID -->
+      <section class="categories-container">
+        <div class="grid-header">
+          <div class="select-all-wrapper">
+            <input type="checkbox" id="selectAllCheckbox">
+            <label for="selectAllCheckbox">Pilih Semua Kategori</label>
+          </div>
+          <div class="grid-subtitle" id="gridSyncStatus">Sync status dengan Sheet...</div>
+        </div>
+        <div class="categories-grid" id="categoriesGrid">
+          <!-- Dynamically populated via JS -->
+          <div class="loading-spinner-wrapper">
+            <i class="fa-solid fa-circle-notch fa-spin spinner-icon"></i>
+            <p>Memuat data dari Google Sheets...</p>
+          </div>
+        </div>
+      </section>
+      </div> <!-- END OF contentDashboard -->
+
+      <!-- TAB 2: ARSIP KALENDER -->
+      <div class="tab-content" id="contentHistory">
+        <div class="history-archive-container">
+          <header class="archive-header">
+            <div class="archive-title">
+              <h2><i class="fa-solid fa-calendar-days"></i> Kalender Arsip Screenshot</h2>
+              <p>Lihat riwayat screenshot harian untuk Shift Pagi dan Shift Malam dari tanggal 1 sampai 31.</p>
+            </div>
+            <div class="archive-selectors">
+              <select id="archiveMonthSelect" class="settings-select" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: var(--radius-sm); font-weight: 600;">
+                <option value="0">Januari</option>
+                <option value="1">Februari</option>
+                <option value="2">Maret</option>
+                <option value="3">April</option>
+                <option value="4">Mei</option>
+                <option value="5">Juni</option>
+                <option value="6" selected>Juli</option>
+                <option value="7">Agustus</option>
+                <option value="8">September</option>
+                <option value="9">Oktober</option>
+                <option value="10">November</option>
+                <option value="11">Desember</option>
+              </select>
+              <select id="archiveYearSelect" class="settings-select" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: var(--radius-sm); font-weight: 600; margin-left: 8px;">
+                <option value="2026" selected>2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+          </header>
+
+          <!-- CALENDAR GRID (1 - 31) -->
+          <div class="calendar-month-grid" id="calendarMonthGrid">
+            <!-- Dynamically generated days (1-31) -->
+          </div>
+
+          <!-- DATE DETAILS PANEL -->
+          <div class="archive-details-panel hidden" id="archiveDetailsPanel">
+            <div class="details-panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+              <h3 style="font-size: 16px; font-weight: 700; color: var(--color-primary);"><i class="fa-solid fa-circle-info"></i> Laporan Tanggal: <span id="selectedArchiveDateText">-</span> - <span id="selectedArchiveShiftText">-</span></h3>
+              <button class="btn btn-secondary" id="btnCloseDetailsPanel" style="padding: 6px 12px; font-size: 12px;">
+                <i class="fa-solid fa-xmark"></i> Tutup Laporan
+              </button>
+            </div>
+            
+            <div class="details-search-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px;">
+              <div class="search-box" style="flex: 1; max-width: 400px; display: flex; align-items: center; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; position: relative;">
+                <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); margin-right: 8px;"></i>
+                <input type="text" id="archiveDetailsSearch" placeholder="Cari kategori di arsip..." style="background: transparent; border: none; outline: none; color: var(--text-primary); width: 100%;">
+              </div>
+              <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                <label for="archiveDetailsFilter" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Status:</label>
+                <select id="archiveDetailsFilter" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: var(--radius-sm); outline: none;">
+                  <option value="All">Semua Status</option>
+                  <option value="Success">Success Only</option>
+                  <option value="Failed">Failed Only</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="archive-details-grid" id="archiveDetailsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; max-height: 500px; overflow-y: auto; padding-right: 8px;">
+              <!-- Dynamically populated detail cards -->
+            </div>
+          </div>
+        </div>
+      </div> <!-- END OF contentHistory -->
+
+    </main>
+
+  </div>
+
+  <!-- MODAL: IMAGE VIEWER -->
+  <div class="modal" id="imageModal">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <div class="modal-title-info">
+          <h2 id="modalCategoryName">Category Name</h2>
+          <a href="#" target="_blank" id="modalUrlLink" class="modal-url"><i class="fa-solid fa-external-link"></i> Website Link</a>
+        </div>
+        <button class="modal-close" id="modalCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+      <div class="modal-body">
+        <img src="" alt="Screenshot" id="modalImage">
+        <div class="image-placeholder hidden" id="modalImagePlaceholder">
+          <i class="fa-regular fa-image placeholder-icon"></i>
+          <p>Gambar tidak tersedia atau belum diambil screenshot.</p>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <span class="capture-time" id="modalCaptureTime">Diambil pada: -</span>
+        <div class="modal-actions">
+          <a href="#" target="_blank" class="btn btn-primary" id="btnOpenDrive"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka di Google Drive</a>
+          <button class="btn btn-secondary" id="modalCloseBtnFooter">Tutup</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT URL -->
+  <div class="modal" id="editUrlModal">
+    <div class="modal-backdrop" id="editUrlModalBackdrop"></div>
+    <div class="modal-content modal-content-sm">
+      <header class="modal-header">
+        <h2>Ubah URL Kategori</h2>
+        <button class="modal-close" id="editUrlModalCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editUrlCategoryName">Kategori</label>
+          <input type="text" id="editUrlCategoryName" disabled>
+        </div>
+        <div class="form-group">
+          <label for="editUrlInput">URL Website</label>
+          <input type="text" id="editUrlInput" placeholder="https://...">
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-secondary" id="editUrlModalCloseBtnFooter">Batal</button>
+        <button class="btn btn-primary" id="btnSaveEditedUrl"><i class="fa-solid fa-floppy-disk"></i> Simpan URL</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
