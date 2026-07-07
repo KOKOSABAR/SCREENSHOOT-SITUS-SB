@@ -60,9 +60,28 @@ class ScreenshotService extends EventEmitter {
     console.log(`[${type.toUpperCase()}] ${message}`);
   }
 
+  // Resolve path to settings.json dynamically (supports read-write AppData on packaged Electron)
+  getSettingsPath() {
+    // Check if running inside Electron main or renderer process
+    const isElectron = (process.versions && process.versions.electron) || process.env.ELECTRON_RUN_AS_NODE;
+    if (isElectron) {
+      try {
+        const { app } = require('electron');
+        // If app is not ready/available in this context, fall back safely
+        const userDataPath = app ? app.getPath('userData') : path.join(process.env.APPDATA || process.env.HOME, 'AutoScreenshotDashboard');
+        return path.join(userDataPath, 'settings.json');
+      } catch (e) {
+        // Safe fallback inside user profile directory
+        const userHome = process.env.APPDATA || process.env.HOME || '.';
+        return path.join(userHome, 'AutoScreenshotDashboard', 'settings.json');
+      }
+    }
+    return path.join(__dirname, '../data/settings.json');
+  }
+
   // Load settings from file
   loadSettings() {
-    const settingsPath = path.join(__dirname, '../data/settings.json');
+    const settingsPath = this.getSettingsPath();
     try {
       if (fs.existsSync(settingsPath)) {
         const raw = fs.readFileSync(settingsPath, 'utf8');
@@ -84,9 +103,13 @@ class ScreenshotService extends EventEmitter {
 
   // Save settings to file
   saveSettings(newSettings) {
-    const settingsPath = path.join(__dirname, '../data/settings.json');
+    const settingsPath = this.getSettingsPath();
     try {
       this.settings = { ...this.settings, ...newSettings };
+      const dataDir = path.dirname(settingsPath);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
       fs.writeFileSync(settingsPath, JSON.stringify(this.settings, null, 2), 'utf8');
       this.log('Settings saved to disk.');
       return true;

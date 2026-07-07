@@ -1,24 +1,18 @@
 const { app, BrowserWindow, Menu } = require('electron');
 Menu.setApplicationMenu(null);
 const path = require('path');
-const { spawn } = require('child_process');
 
 let mainWindow;
-let serverProcess;
 
 function startExpressServer() {
-  // Start server.js as a background process
-  serverProcess = spawn('node', [path.join(__dirname, 'server.js')], {
-    env: { ...process.env, PORT: '3000' }
-  });
-
-  serverProcess.stdout.on('data', (data) => {
-    console.log(`[Express stdout]: ${data}`);
-  });
-
-  serverProcess.stderr.on('data', (data) => {
-    console.error(`[Express stderr]: ${data}`);
-  });
+  try {
+    // Run Express server directly in the Electron thread
+    process.env.PORT = '3000';
+    require('./server.js');
+    console.log('[Electron] Integrated Express server loaded successfully.');
+  } catch (err) {
+    console.error('[Electron] Failed to load integrated Express server:', err.message);
+  }
 }
 
 function createWindow() {
@@ -37,10 +31,10 @@ function createWindow() {
   mainWindow.setMenu(null);
 
   // Load the local Express server URL
-  // We wait 2 seconds for Express to boot up before loading
+  // We wait 1.5 seconds for Express to boot up before loading
   setTimeout(() => {
     mainWindow.loadURL('http://localhost:3000');
-  }, 2000);
+  }, 1500);
 
   // If Express fails to load or connection is refused, reload
   mainWindow.webContents.on('did-fail-load', () => {
