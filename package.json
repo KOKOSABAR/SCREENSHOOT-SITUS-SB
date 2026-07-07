@@ -2,10 +2,12 @@
   "name": "auto-ss-link-website",
   "version": "1.0.0",
   "description": "Website Auto-Screenshot Dashboard with Google Sheets Integration",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
     "start": "node server.js",
-    "build-exe": "node build-exe.js"
+    "desktop": "electron .",
+    "build-exe": "node build-exe.js",
+    "dist": "electron-builder --win nsis"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -24,7 +26,34 @@
       "node18-win-x64"
     ]
   },
+  "build": {
+    "appId": "com.autoss.dashboard",
+    "productName": "AutoScreenshotDashboard",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Auto Screenshot Dashboard"
+    },
+    "files": [
+      "**/*",
+      "!dist",
+      "!node_modules/electron",
+      "!node_modules/electron-builder"
+    ]
+  },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
   }
 }
