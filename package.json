@@ -4,7 +4,8 @@
   "description": "Website Auto-Screenshot Dashboard with Google Sheets Integration",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build-exe": "node build-exe.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -12,6 +13,16 @@
     "puppeteer": "^22.12.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "bin": "server.js",
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "data/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
   },
   "engines": {
     "node": ">=18.0.0"
