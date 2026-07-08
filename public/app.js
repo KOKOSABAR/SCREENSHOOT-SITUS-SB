@@ -730,6 +730,12 @@ function startLogStream() {
     }
   });
 
+  // Listen to background Google Sheets cache updates
+  logEventSource.addEventListener('categories-updated', () => {
+    console.log('[SSE] Google Sheets update detected. Auto-refreshing dashboard...');
+    silentReloadCategories();
+  });
+
   logEventSource.onerror = (err) => {
     console.error('SSE connection lost. Reconnecting...', err);
   };

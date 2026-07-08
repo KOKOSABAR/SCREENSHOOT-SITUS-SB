@@ -139,14 +139,42 @@ function mergeRestoredCategories(cache) {
   return cache;
 }
 
+// Helper to compare two cache objects to check if any data (like links/status) changed
+function hasCacheChanged(oldCache, newCache) {
+  if (!oldCache || !newCache) return true;
+  if (oldCache.length !== newCache.length) return true;
+  
+  for (let i = 0; i < oldCache.length; i++) {
+    const o = oldCache[i];
+    const n = newCache.find(c => c.id === o.id);
+    if (!n) return true;
+    if (o.url !== n.url || 
+        o.statusPagi !== n.statusPagi || 
+        o.screenshotUrlPagi !== n.screenshotUrlPagi ||
+        o.statusMalam !== n.statusMalam || 
+        o.screenshotUrlMalam !== n.screenshotUrlMalam) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Helper to fetch categories from Google Sheets and update cache
 async function refreshCategoriesCache(scriptUrl) {
   try {
     const response = await fetch(`${scriptUrl}?t=${Date.now()}`);
     const data = await response.json();
     if (data && data.success && data.data) {
-      categoriesCache = mergeRestoredCategories(data.data);
-      console.log(`[INFO] Categories cache successfully loaded from sheet: ${categoriesCache.length} items.`);
+      const freshData = mergeRestoredCategories(data.data);
+      
+      // Check if data actually changed before replacing and broadcasting
+      const changed = hasCacheChanged(categoriesCache, freshData);
+      categoriesCache = freshData;
+      
+      if (changed) {
+        console.log(`[INFO] Cache changes detected. Broadcasting update to all dashboard clients.`);
+        broadcastSSE('categories-updated', { success: true, count: categoriesCache.length });
+      }
       return true;
     }
   } catch (err) {
@@ -154,6 +182,18 @@ async function refreshCategoriesCache(scriptUrl) {
   }
   return false;
 }
+
+// Start background auto-synchronization interval (Runs every 25 seconds)
+// This will fetch updates silently from Google Sheets and update the dashboard in real-time
+setInterval(async () => {
+  // Only sync if browser is not busy capturing (to avoid race conditions)
+  if (screenshotService.isProcessing) return;
+  
+  const scriptUrl = screenshotService.settings.appsScriptUrl;
+  if (scriptUrl) {
+    await refreshCategoriesCache(scriptUrl);
+  }
+}, 25000);
 
 // Update cache in real-time when capture starts (status = 'Capturing')
 screenshotService.on('capture-start', (data) => {
