@@ -74,9 +74,10 @@ function createWindow(port) {
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
-  // If a second instance is spawned (e.g. triggered by helper processes), immediately terminate
+  // Forcefully terminate immediately to prevent any blank window initialization
   console.log('[Electron] Second instance blocked. Exiting...');
-  app.quit();
+  app.exit(0);
+  process.exit(0);
 } else {
   // Focus the primary window if a second instance launch is attempted
   app.on('second-instance', () => {
