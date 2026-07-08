@@ -167,18 +167,28 @@ class ScreenshotService extends EventEmitter {
         this.log(`Using locally installed Google Chrome: ${localChrome}`);
       }
 
+      const isHeadless = this.settings.headless === true || this.settings.headless === 'true';
+      const chromeArgs = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--disable-blink-features=AutomationControlled',
+        '--window-size=' + w + ',' + h
+      ];
+
+      // Explicitly inject headless flags to args when enabled (ensures 100% silent execution in Windows)
+      if (isHeadless) {
+        chromeArgs.push('--headless');
+        chromeArgs.push('--headless=new');
+        chromeArgs.push('--disable-gpu'); // Recommended for headless execution on Windows
+      }
+
       this.browser = await puppeteer.launch({
         executablePath: localChrome || undefined, // Use local Chrome, else fall back to downloaded bundle
-        headless: this.settings.headless === true || this.settings.headless === 'true' ? true : false,
+        headless: isHeadless ? 'new' : false, // Force use 'new' headless engine for compatibility
         ignoreDefaultArgs: ['--enable-automation'],
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process',
-          '--disable-blink-features=AutomationControlled',
-          '--window-size=' + w + ',' + h
-        ],
+        args: chromeArgs,
         defaultViewport: {
           width: w,
           height: h,
