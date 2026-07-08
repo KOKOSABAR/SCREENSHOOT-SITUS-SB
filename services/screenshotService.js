@@ -125,6 +125,29 @@ class ScreenshotService extends EventEmitter {
     this.log('Login state has been reset.');
   }
 
+  // Smart helper to locate the installed Google Chrome executable on the host computer
+  getChromeExecutablePath() {
+    if (process.platform === 'win32') {
+      const paths = [
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        path.join(process.env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe')
+      ];
+      for (const p of paths) {
+        if (fs.existsSync(p)) return p;
+      }
+    } else if (process.platform === 'darwin') {
+      const p = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+      if (fs.existsSync(p)) return p;
+    } else if (process.platform === 'linux') {
+      const paths = ['/usr/bin/google-chrome', '/usr/bin/chromium-browser'];
+      for (const p of paths) {
+        if (fs.existsSync(p)) return p;
+      }
+    }
+    return null; // Fallback to Puppeteer's internal bundle
+  }
+
   // Initialize Puppeteer browser & page
   async initBrowser() {
     if (this.browser) return;
@@ -139,7 +162,13 @@ class ScreenshotService extends EventEmitter {
 
     this.log('Launching browser (with Stealth plugin enabled)...');
     try {
+      const localChrome = this.getChromeExecutablePath();
+      if (localChrome) {
+        this.log(`Using locally installed Google Chrome: ${localChrome}`);
+      }
+
       this.browser = await puppeteer.launch({
+        executablePath: localChrome || undefined, // Use local Chrome, else fall back to downloaded bundle
         headless: this.settings.headless === true || this.settings.headless === 'true' ? true : false,
         ignoreDefaultArgs: ['--enable-automation'],
         args: [
