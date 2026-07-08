@@ -383,7 +383,7 @@ function renderCategoriesGrid() {
               <i class="fa-solid fa-image"></i>
             </button>
           ` : ''}
-          ${hasUrl && !isQueueRunning ? `
+          ${hasUrl ? `
             <button class="card-action-btn" title="Ambil Screenshot Sekarang" onclick="event.stopPropagation(); captureSingleItem('${item.id}', '${item.name}', '${item.url}')">
               <i class="fa-solid fa-camera"></i>
             </button>
