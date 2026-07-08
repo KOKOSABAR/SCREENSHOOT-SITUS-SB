@@ -178,16 +178,22 @@ class ScreenshotService extends EventEmitter {
       ];
 
       // Explicitly inject headless flags to args when enabled (ensures 100% silent execution in Windows)
+      // Additional flags to force silent, headless background execution on Windows
       if (isHeadless) {
         chromeArgs.push('--headless');
         chromeArgs.push('--headless=new');
-        chromeArgs.push('--disable-gpu'); // Recommended for headless execution on Windows
+        chromeArgs.push('--disable-gpu');
+        chromeArgs.push('--disable-software-rasterizer');
+        chromeArgs.push('--remote-debugging-pipe');
+        chromeArgs.push('--no-first-run');
+        chromeArgs.push('--no-default-browser-check');
       }
 
       this.browser = await puppeteer.launch({
         executablePath: localChrome || undefined, // Use local Chrome, else fall back to downloaded bundle
         headless: isHeadless ? 'new' : false, // Force use 'new' headless engine for compatibility
         ignoreDefaultArgs: ['--enable-automation'],
+        windowsHide: true, // Forces Windows OS to completely hide the spawned chrome.exe window
         args: chromeArgs,
         defaultViewport: {
           width: w,
