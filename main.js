@@ -70,17 +70,34 @@ function createWindow(port) {
   });
 }
 
-app.whenReady().then(async () => {
-  // Find a free port before starting window or Express
-  activePort = await getFreePort(35000);
-  startExpressServer(activePort);
-  createWindow(activePort);
+// Enforce Single Instance Lock to prevent duplicate windows or background process spawning
+const gotTheLock = app.requestSingleInstanceLock();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow(activePort);
+if (!gotTheLock) {
+  // If a second instance is spawned (e.g. triggered by helper processes), immediately terminate
+  console.log('[Electron] Second instance blocked. Exiting...');
+  app.quit();
+} else {
+  // Focus the primary window if a second instance launch is attempted
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
   });
-});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+  app.whenReady().then(async () => {
+    // Find a free port before starting window or Express
+    activePort = await getFreePort(35000);
+    startExpressServer(activePort);
+    createWindow(activePort);
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow(activePort);
+    });
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
+}
