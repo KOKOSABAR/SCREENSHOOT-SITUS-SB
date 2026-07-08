@@ -683,13 +683,15 @@ async function captureSingleItem(id, name, url) {
       badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> CAPTURING';
     }
 
-    const res = await fetch('/api/capture/single', {
+     const res = await fetch('/api/capture/single', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, name, url, shift })
     });
     const data = await res.json();
-    appendTerminalLog(data.message, 'info');
+    if (data && data.message) {
+      appendTerminalLog(data.message, 'info');
+    }
     
     // Automatically reload categories to reflect successful status and image
     silentReloadCategories();
