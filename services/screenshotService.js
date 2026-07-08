@@ -22,7 +22,7 @@ class ScreenshotService extends EventEmitter {
     
     // Default settings
     this.settings = {
-      appsScriptUrl: '',
+      appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzUIozxHAv1elXnIrPGq8rAtR5nLojg9Ct2JJ3cG8VpYQFxCBvzgZT3S1-NBVOMr7WJ/exec',
       username: '',
       password: '',
       captureDelay: 5000,
